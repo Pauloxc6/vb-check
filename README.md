@@ -1,7 +1,7 @@
 
 # 📡 VB-CHECK
 
-Ferramenta de análise automatizada de segurança e reconhecimento de aplicações web, desenvolvida em Bash com auxílio de IA.
+VB-CHECK é uma ferramenta de reconhecimento e análise automatizada de aplicações web, escrita em Bash. Foi projetada para executar coleta de informações, enumeração de superfícies de ataque e testes básicos de segurança em sites gerados ou desenvolvidos com auxílio de inteligência artificial.
 
 O objetivo do projeto é automatizar a coleta de informações públicas de sistemas web e realizar análises básicas de segurança, auxiliando no processo de auditoria e estudo de exposição de serviços.
 
