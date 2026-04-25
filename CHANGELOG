@@ -1,0 +1,99 @@
+📜 CHANGELOG
+[v0.1.0] - Base inicial do projeto
+✨ Adicionado
+Estrutura principal do script Bash
+Sistema de imports de bibliotecas (libs/)
+Variáveis globais de controle (verbose, ssl, ignore_icmp)
+Parser de argumentos (--url, --help, --ssl, etc.)
+Sistema básico de execução (main loop)
+Função de verificação de conectividade (ctest)
+
+[v0.2.0] - Módulo de Headers HTTP
+✨ Adicionado
+Captura de headers HTTP via curl
+Parser de:
+HTTP status
+Location redirect
+Server type
+X-Powered-By
+Set-Cookie
+Sistema de análise de headers com base em configuração (headers.conf)
+Detecção básica de WAF via headers
+Salvamento de logs no banco SQLite
+
+[v0.3.0] - Sistema de Banco de Dados
+✨ Adicionado
+Integração com SQLite
+Criação automática de banco e migrations
+Schema para logs HTTP e DNS
+Sistema de exportação de banco (dump_database)
+Logs estruturados de:
+headers
+DNS
+MX / NS records
+
+[v0.4.0] - Módulo DNS Recon
+✨ Adicionado
+Enumeração de:
+NS records
+MX records
+TXT records
+SOA records
+Brute force de subdomínios
+Suporte a wordlist personalizada
+Integração com banco de dados
+Detecção de IPs associados
+
+[v0.5.0] - Scanner de Diretórios
+✨ Adicionado
+Integração com gobuster
+Brute force de diretórios e arquivos
+Suporte a wordlist customizada
+Headers de cookie customizado
+Logging de resultados
+
+[v0.6.0] - Módulo SSL/TLS
+✨ Adicionado
+Integração com sslscan
+Verificação de:
+Protocolos
+Ciphers
+Certificados
+Teste de vulnerabilidade Heartbleed via sslyze
+
+[v0.7.0] - Detecção de WAF
+✨ Adicionado
+Sistema de detecção de WAF baseado em:
+Headers HTTP
+IP prefix
+Cookies de sessão
+Integração com YAML (waf.yaml)
+Lista de WAFs suportados:
+Cloudflare
+Akamai
+Imperva
+Sucuri
+AWS WAF
+F5 BigIP
+Sistema de score de confiança inicial
+
+[v0.8.0] - Sistema de Cookies Avançado
+✨ Adicionado
+Parsing robusto de Set-Cookie
+Detecção de flags:
+Secure
+HttpOnly
+SameSite
+Identificação de cookies sensíveis (session/auth/token)
+Integração com detecção de WAF via cookies
+Normalização de dados de cookies
+
+[v0.9.0] - Sistema de Score WAF
+✨ Adicionado
+Sistema de score para detecção de WAF
+Pontuação baseada em evidências:
+Headers
+Cookies
+IP patterns
+Classificação de confiança (base inicial)
+Estrutura para expansão futura de scoring engine

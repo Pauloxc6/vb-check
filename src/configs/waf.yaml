@@ -1,0 +1,111 @@
+wafs:
+  name:
+      cloudflare: 
+        id: 1
+        server: cloudflare
+        cookies: 
+          - "cf_"
+          - "cf_clearance"
+          - "__cfruid"
+          - "cf_chl_"
+        ips:
+          - "104.16"
+          - "104.17"
+          - "104.18"
+          - "104.19"
+          - "104.20"
+          - "104.21"
+          - "104.22"
+          - "104.23"
+          - "104.24"
+          - "104.25"
+          - "104.26"
+          - "104.27"
+          - "104.28"
+          - "104.29"
+          - "104.30"
+          - "104.31"
+          - "172.64"
+          - "172.65"
+          - "172.66"
+          - "172.67"
+          - "172.68"
+          - "172.69"
+          - "172.70"
+          - "172.71"          
+      akamai:
+            id: 2
+            server: akamai
+            cookies:
+              - "ak_bmsc"
+              - "bm_sv"
+              - "_abck"
+            ips: []
+      imperva:
+        id: 3
+        server: imperva
+        cookies:
+          - "visid_incap_"
+          - "incap_ses_"
+          - "nlbi_"
+        ips: []
+
+      sucuri:
+        id: 4
+        server: sucuri
+        cookies:
+          - "sucuri_cloudproxy_uuid"
+          - "sucuri_session"
+        ips: []
+
+      fastly:
+        id: 5
+        server: fastly
+        cookies:
+          - "_fastly_session"
+        ips: []
+
+      f5_bigip:
+        id: 6
+        server: bigip
+        cookies:
+          - "BIGipServer"
+          - "TS"
+        ips: []
+
+      aws_waf:
+        id: 7
+        server: awselb
+        cookies:
+          - "AWSALB"
+          - "AWSALBCORS"
+        ips: []
+
+      barracuda:
+        id: 8
+        server: barracuda
+        cookies:
+          - "barra_counter_session"
+        ips: []
+
+      radware:
+        id: 9
+        server: radware
+        cookies:
+          - "rdwr"
+        ips: []
+
+      fortinet:
+        id: 10
+        server: fortigate
+        cookies:
+          - "FORTIWAFSID"
+        ips: []
+
+      citrix:
+        id: 11
+        server: netscaler
+        cookies:
+          - "NSC_"
+          - "citrix_ns_id"
+        ips: []                                                                              
