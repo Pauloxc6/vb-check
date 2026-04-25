@@ -155,8 +155,8 @@ VB-CHECK/
 │   ├── sql/                  # Testes relacionados ao banco de dados
 │   └── temp/                 # Arquivos temporários de validação
 │
-├── tools/                   # Ferramentas auxiliares externas
-    └── install.sh           # Script de instalação/configuração inicial
+└─── tools/                   # Ferramentas auxiliares externas
+     └── install.sh           # Script de instalação/configuração inicial
 ```
 ---
 ### ⚠️ Aviso Legal
@@ -199,6 +199,6 @@ yq
 
 📚 Referências
 
-OWASP Web Security Testing Guide
-OWASP Top 10
-Documentação de ferramentas de recon e análise web
+- OWASP Web Security Testing Guide
+- OWASP Top 10
+- Documentação de ferramentas de recon e análise web
