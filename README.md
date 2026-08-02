@@ -1,6 +1,11 @@
 
 # 📡 VB-CHECK
 
+![Bash](https://img.shields.io/badge/Bash-5.x-green)
+![SQLite](https://img.shields.io/badge/SQLite-3-blue)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Version](https://img.shields.io/badge/version-v0.9.0-orange)
+
 VB-CHECK é uma ferramenta de reconhecimento e análise automatizada de aplicações web, escrita em Bash. Foi projetada para executar coleta de informações, enumeração de superfícies de ataque e testes básicos de segurança em sites gerados ou desenvolvidos com auxílio de inteligência artificial.
 
 O objetivo do projeto é automatizar a coleta de informações públicas de sistemas web e realizar análises básicas de segurança, auxiliando no processo de auditoria e estudo de exposição de serviços.
