@@ -19,6 +19,8 @@ function bruteDNS(){
     # shellcheck disable=SC2154
     local wordlist="${wordlist_dns}"
 
+    local regex_ip='^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])$'
+
     cat <<EOF
     _                _ _            ____  _   _ ____  
    / \   _ __   __ _| (_)___  ___  |  _ \| \ | / ___| 
@@ -58,7 +60,7 @@ EOF
     echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de brute force de subdomínios${NUL}"
 
     # main
-    if [[ "$dns" =~ ^([a-zA-Z0-9-]+\.){2,}[a-zA-Z]{2,}$ ]]; then
+    if [[ "$dns" =~ ^([a-zA-Z0-9-]+\.){2,}[a-zA-Z]{2,}$ || "$dns" =~ $regex_ip ]]; then
         echo -e "${WHITE}[${RED}!${WHITE}] O padrão de ${YELLOW}${dns}${WHITE} não atende aos requisitos!${NUL}"
     else
         while IFS= read -r subs; do
@@ -88,39 +90,48 @@ EOF
         done < "${wordlist}"
     fi
 
-    # * Banco de dados
-    while IFS= read -r ips; do
-        sqlite3 "$database_logs" "INSERT INTO dns(domain, ip) VALUES ('$dns', '$ips');"
-    done < <(host -t A "${dns}" | awk '/has address/ {print $4}')
+    if [[ "$dns" =~ $regex_ip ]]; then
+        echo -e "${WHITE}[${BLUE}DNS${WHITE}] Iniciando pesquisa reserva de ip${NUL}"
+        while IFS= read -r rips;do
+            echo -e "${WHITE}[${BLUE}DNS${WHITE}] ${YELLOW}${dns} ${BLUE}-> ${GREEN}${rips}"
+        done < <(host "$dns" | awk '/domain name/ {print $5}') || echo -e "${WHITE}[${BLUE}DNS${WHITE}] ${RED}Nenhum nome reverso encontrado!${NUL}"
+    #    echo -e "${WHITE}[${RED}!${WHITE}] O padrão de ${YELLOW}${dns}${WHITE} não pode ser analisado!${NUL}"
+    else 
+        # * Banco de dados
+        while IFS= read -r ips; do
+            sqlite3 "$database_logs" "INSERT INTO dns(domain, ip) VALUES ('$dns', '$ips');"
+        done < <(host -t A "${dns}" | awk '/has address/ {print $4}')
 
 
-    echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando testes nos servidores NS${NUL}"
-    for ns in $(dig "${dns}" NS +short); do 
-        dig @"$ns" "${dns}" AXFR
-    done
+        echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando testes nos servidores NS${NUL}"
+        for ns in $(dig "${dns}" NS +short); do 
+            dig @"$ns" "${dns}" AXFR
+        done
 
-    echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de amplificação DDoS nos servidores NS${NUL}"
-    for ns in $(dig "${dns}" NS +short);do
-        hping3 --udp -c 10000 --data 1000 --faster "${ns}"
-    done
+        echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de amplificação DDoS nos servidores NS${NUL}"
+        for ns in $(dig "${dns}" NS +short);do
+            hping3 --udp -c 10000 --data 1000 --faster "${ns}"
+        done
 
-    echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de registro TXT${NUL}"
-    host -t txt "$dns"
+        echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de registro TXT${NUL}"
+        host -t txt "$dns"
 
-    while IFS= read -r txt; do
-        sqlite3 "${database_logs}" "INSERT INTO dns_text(domain, txt) VALUES ('$dns','$txt')"
-    done < <(host -t txt "$dns" | awk '/descriptive text/ {print $4}')
+        while IFS= read -r txt; do
+            sqlite3 "${database_logs}" "INSERT INTO dns_text(domain, txt) VALUES ('$dns','$txt')"
+        done < <(host -t txt "$dns" | awk '/descriptive text/ {print $4}')
 
-    echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de registro SRV${NUL}"
-    dnsrecon -t srv -d "$dns"
+        echo -e "\n${WHITE}[${GREEN}+${WHITE}] Iniciando teste de registro SRV${NUL}"
+        dnsrecon -t srv -d "$dns"
 
-    echo -e "${WHITE}[${GREEN}+${WHITE}] Iniciando teste de registro SOA${NUL}"
-    if ns2=$(dig "$dns" SOA +short | awk '{print $1}') 2>/dev/null; then 
-        if [ -n "$ns2" ]; then
-            dig @"$ns2" "$dns" AXFR 2>/dev/null
-        else
-            echo -e "${WHITE}[${RED}!${WHITE}] ${RED}Não foi possível realizar o teste no registro SOA!${NUL}" >&2
+        echo -e "${WHITE}[${GREEN}+${WHITE}] Iniciando teste de registro SOA${NUL}"
+        if ns2=$(dig "$dns" SOA +short | awk '{print $1}') 2>/dev/null; then 
+            if [ -n "$ns2" ]; then
+                dig @"$ns2" "$dns" AXFR 2>/dev/null
+            else
+                echo -e "${WHITE}[${RED}!${WHITE}] ${RED}Não foi possível realizar o teste no registro SOA!${NUL}" >&2
+            fi
         fi
+
     fi
 
 }
