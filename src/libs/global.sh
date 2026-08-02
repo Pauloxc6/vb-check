@@ -331,3 +331,29 @@ function cookie_manager(){
     get_cookie="$(grep -i "^cookie_gobuster=" "$save_cookie" | cut -d "=" -f2- | tr -d '"')"
 
 }
+
+#=========================================================
+# Check Connection Timeout
+#=========================================================
+
+function cctimeout() {
+    local timeout=300
+    local start=$(date +%s)
+    local main_pid="$1"
+
+    while true; do
+        if ping -c1 -W1 "$surl" >/dev/null 2>&1; then
+            start=$(date +%s)
+        fi
+
+        now=$(date +%s)
+
+        if (( now - start >= timeout )); then
+            echo "Host offline há ${timeout}s"
+            kill "$main_pid"
+            break
+        fi
+
+        sleep 1
+    done
+}

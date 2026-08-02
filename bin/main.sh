@@ -61,6 +61,8 @@ function check(){
         exit 1
     fi
 
+    cctimeout "$$" &
+
     # * Chama a função de teste de conexão
     ctest
 
