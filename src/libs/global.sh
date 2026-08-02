@@ -219,7 +219,9 @@ function __clone_site(){
 
     if [[ ! -d "${folder_clone}" ]]; then
         echo -e "${WHITE}[${RED}!${WHITE}] ${RED}O diretório ${WHITE}${folder_clone} ${RED}não existe!${NUL}"
-        exit 1
+        if mkdir -p "${folder_clone}"; then
+            echo -e "${WHITE}[${GREEN}+${WHITE}] ${BLUE}O diretório ${WHITE}${folder_clone} ${BLUE}foi criado com sucesso!${NUL}"
+        fi
     fi
 
     echo -e "${WHITE}[${GREEN}!${WHITE}] ${BLUE}Entrando no diretório: ${WHITE}${folder_clone}${NUL}"
