@@ -139,7 +139,7 @@ EOF
 
     sqlite3 -cmd ".parameter set @url '${surl}'" "${database_logs}" \
     "INSERT INTO logs_headers(nome, servidor, linguagem, http_version, cookie, waf) 
-    VALUES ('@url', '${serverType:-NULL}', '${langType:-NULL}', '${current_version:-NULL}', '${cookie_original:-NULL}', '${detected_waf:-NULL}')"
+    VALUES (@url, '${serverType:-NULL}', '${langType:-NULL}', '${current_version:-NULL}', '${cookie_original:-NULL}', '${detected_waf:-NULL}')"
 
     # Headers
     cat <<EOF
