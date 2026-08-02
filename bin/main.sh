@@ -102,6 +102,7 @@ while [[ $# -ne 0 ]]; do
     case "${1}" in
         --help|-h) 
             __help__
+            exit 0
         ;;
         -d) debuger ;;
         --url)
@@ -119,7 +120,7 @@ while [[ $# -ne 0 ]]; do
         --view-clone) __view_clone ;;
         -v) export verbose_on=1 ;;
         --ssl) export ssl_on=1 ;;
-        *) __help__
+        *) __help__ ; exit 0;
     esac
     shift
 done
