@@ -1,23 +1,8 @@
 #!/usr/bin/env bash
-#========================================================
-# Arquivo de configuração
-#========================================================
-
-libs=( "./global.sh" "./colors.sh" "./tech.sh" )
-for lib in "${libs[@]}"; do
-    if [[ -f "${lib}" ]]; then
-        # shellcheck disable=SC1090
-        source "${lib}" > /dev/null 2>&1
-    else
-        echo -e "${WHITE}[${GREEN}!${WHITE}] ${RED}Erro ao importar a lib: ${WHITE}$lib${NUL}"
-    fi
-done
 
 #========================================================
 # Vars
 #========================================================
-# ! Proteção de erro no código
-set -euo pipefail
 
 # Otimização
 export LC_ALL=C
@@ -60,10 +45,10 @@ function check_headers(){
     # shellcheck disable=SC2154
     if [[ "${ssl_on:-0}" == 1 ]]; then     
         if __check_ssl; then
-            curl -s -I -L --max-time 10 "https://${surl}" > "$output_file"
+            curl -s -I -L --max-time 10 "https://${surl}/${path}" > "$output_file"
         fi
     else
-        curl -s -I -L --max-time 10 "http://${surl}" > "$output_file"
+        curl -s -I -L --max-time 10 "http://${surl}/${path}" > "$output_file"
     fi
 
     cat <<EOF
@@ -141,6 +126,8 @@ EOF
     "INSERT INTO logs_headers(nome, servidor, linguagem, http_version, cookie, waf) 
     VALUES (@url, '${serverType:-NULL}', '${langType:-NULL}', '${current_version:-NULL}', '${cookie_original:-NULL}', '${detected_waf:-NULL}')"
 
+
+    local count=0
     # Headers
     cat <<EOF
 
@@ -160,9 +147,13 @@ EOF
 
         if grep -iq "^$header_name:" "$output_file"; then
             echo -e "${WHITE}[${YELLOW}V${WHITE}] [ ${BLUE}$header_name ${WHITE}] -----> ${YELLOW}$header_desc${NUL}"
+            count=$(( count + 1))
         else
             echo -e "${WHITE}[${RED}X${WHITE}] [ ${BLUE}$header_name ${WHITE}] -----> ${YELLOW}$header_desc${NUL}"
         fi
     done < "$config_file"
 
+    result=$( bc <<< "( $count * 100 ) / 17")
+
+    echo -e "${WHITE}[${BLUE}H${WHITE}] ${CYAN}SEC HEADERS: ${WHITE}${WHITE}${result}% | $count/17${NUL}"
 }

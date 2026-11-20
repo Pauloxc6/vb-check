@@ -2,3 +2,4 @@ test
 src/exports/*
 src/database/*.db
 src/database/exports/*
+.env

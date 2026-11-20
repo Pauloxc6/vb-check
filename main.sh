@@ -8,9 +8,8 @@ __     ______         ____ _   _ _____ ____ _  __
 \ \   / / __ )       / ___| | | | ____/ ___| |/ /
  \ \ / /|  _ \ _____| |   | |_| |  _|| |   | ' / 
   \ V / | |_) |_____| |___|  _  | |__| |___| . \ 
-   \_/  |____/       \____|_| |_|_____\____|_|\_\
+   \_/  |____/       \____|_| |_|_____\____|_|\_\ 
                                                  
-
 By: @Pauloxc6
 
 Utilize o parâmetro --help para visualizar o menu de ajuda!
@@ -20,7 +19,7 @@ EOF
 # Imports
 #========================================================
 
-libs=( "./src/libs/headers.sh" "./src/libs/colors.sh" "./src/libs/global.sh" "./src/libs/gen_host.sh" "./src/libs/tech.sh" "./src/libs/dns.sh" "./src/libs/dirs.sh" "./src/libs/ssl.sh")
+libs=( "./src/libs/call.sh" )
 for lib in "${libs[@]}"; do
     if [[ -f "${lib}" ]]; then
         # shellcheck disable=SC1090
@@ -34,20 +33,25 @@ done
 # Vars
 #========================================================
 # ! Proteção de erro no código
-set -euo pipefail
 
 # Otimização
 export LC_ALL=C
 export LANG=C
 
-export surl=""
-export runvb=1
-export ssl_on=0
-export verbose_on=0
-export ignore_icmp=0
-export wordlist_dns=""
-export wordlist_dirs=""
-export cookie1=""
+surl=""
+runvb=1
+ssl_on=0
+dirs_on=1
+dns_on=1
+email_on=1
+url_on=1
+verbose_on=0
+ignore_icmp=0
+wordlist_dns=""
+wordlist_dirs=""
+cookie1=""
+
+rootdir="$( cd -- "$(basename -- "$(dirname "$0")" )" && pwd )"
 
 #========================================================
 # Functions
@@ -61,14 +65,13 @@ function check(){
         exit 1
     fi
 
-    cctimeout "$$" &
+    cleanuri
 
     # * Chama a função de teste de conexão
     ctest
 
-    [[ "${verbose_on}" == 1 ]] && {
-        echo -e "${WHITE}[${PURPLE}VERBOSE${WHITE}] Iniciando os testes no banco de dados!${NUL}"
-    }
+    [[ "${verbose_on}" == 1 ]] && { echo -e "${WHITE}[${PURPLE}VERBOSE${WHITE}] Iniciando os testes no banco de dados!${NUL}" ;}
+
     __check_database
 
     # * Verifica e cria o diretório
@@ -77,22 +80,34 @@ function check(){
 
     # shellcheck disable=SC2155
     export HOMEDIR="$(mdir)"
-    if [ "${verbose_on:=1}" == 1 ]; then
-        echo -e "${WHITE}[${PURPLE}VERBOSE${WHITE}] ${GREEN}Criado em ${BLUE}${HOMEDIR}${GREEN}!${NUL}"
-    fi
+    if [ "${verbose_on:=1}" == 1 ]; then echo -e "${WHITE}[${PURPLE}VERBOSE${WHITE}] ${GREEN}Criado em ${BLUE}${HOMEDIR}${GREEN}!${NUL}" ; fi
 
     # * Chama a função headers
     check_headers
 
     # * Análise DNS
-    bruteDNS
+    [[ "${dns_on}" == 1 ]] && { bruteDNS ;}
 
     # * Análise de diretórios e arquivos
-    dirs
+    [[ "${dirs_on}" == 1 ]] && { dirs ;}
 
     # * Análise SSL/TLS
-    [[ "${ssl_on}" == 1 ]] && {
-        sslc
+    [[ "${ssl_on}" == 1 ]] && { sslc ;}
+
+    # * Validando virus na url
+    [[ "${url_on}" == 1 ]] && { virustotal ;}
+
+    # * Confiabilidade da email
+    [[ "${email_on}" == 1 ]] && { email ;}
+
+    # * Análise SSL/TLS
+    [[ "${vuln_on}" == 1 ]] && {
+        #vuln.smtp.userenum 
+        #vuln.nuclei.scan
+        vuln.javascript.scan
+        #vuln.subdomaintakeover.scan
+        #modat.cves.scan
+        #param.vuln.scan
     }
 }
 
@@ -102,15 +117,9 @@ function check(){
 
 while [[ $# -ne 0 ]]; do
     case "${1}" in
-        --help|-h) 
-            __help__
-            exit 0
-        ;;
+        --help|-h)  __help__ ; exit 0 ;;
         -d) debuger ;;
-        --url)
-            shift
-            export surl="${1}"
-        ;;
+        --url) shift ; export surl="${1}" ;;
         --cookie) shift ; cookie_manager "$1" ;;
         --ignore-icmp) export ignore_icmp=1 ;;
         --dns-wordlist|-dw) shift ; export wordlist_dns="$1" ;;
@@ -120,9 +129,11 @@ while [[ $# -ne 0 ]]; do
         --remove-export|-re) __remove_export ;;
         --clone) __clone_site ;;
         --view-clone) __view_clone ;;
-        -v) export verbose_on=1 ;;
+        -v|--verbose) export verbose_on=1 ;;
         --ssl) export ssl_on=1 ;;
-        *) __help__ ; exit 0;
+        --vuln) export vuln_on=1 ;;
+        --disable) shift ; disbalefunctions "$1" ;;
+        *) __help__ ; exit 0 ;;
     esac
     shift
 done
@@ -132,3 +143,9 @@ done
 #========================================================
 
 [[ "${runvb}" == 1 ]] && { check; }
+
+#========================================================
+# Exit
+#========================================================
+
+trap cleanup EXIT

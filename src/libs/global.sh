@@ -34,8 +34,8 @@ Argumentos:
     --ignore-icmp   - Utilize para ignorar o icmp, quando houver regras de firewall bloqueando o icmp
                       (Algumas funcionalidades podem não ficar muito precisas)
     --cookie        - Utilize para setar o cookie para dar bypass em firewalls
-    --dns-wordlist  - Utilize para setar a wordlist para o brute force de subdomínios
-    --dir-wordlist  - Utilize para setar a wordlist para o brute force de diretórios
+    --dns-wordlist, -dw  - Utilize para setar a wordlist para o brute force de subdomínios
+    --dir-wordlist, -diw - Utilize para setar a wordlist para o brute force de diretórios
     
     Clonagem
     --clone      - Utilize para clonagem de um website (Ex: --url google.com --clone)
@@ -48,18 +48,18 @@ Argumentos:
     Database
     --export-db, -eb              - Utilize para exporta todos dos dados do banco de dados
 
+    Vulnerabilidade
+    --vuln  - Ativa o escaneamento de vulnerabilidade para o host
+
+    Outros:
+    --disable <item>  Desativa escaneamento específico ou em lote.
+                      Valores aceitos:
+                        all, net, sec, org, recon, threat
+                        lista: "dns,dirs,email,vuln,url"
+
 Exemplos de uso:
 
-bash bin/main.sh --url google.com
-bash bin/main.sh --url google.com --ignore-icmp
-bash bin/main.sh --url google.com --clone
-bash bin/main.sh --url google.com --view-clone
-bash bin/main.sh --url google.com --dns-wordlist test.txt
-
-bash bin/main.sh --remove-all-exports
-bash bin/main.sh --url google.com --remove-export
-
-bash bin/main.sh --export-db
+bash $0 --url google.com
 HELP
 
 }
@@ -88,6 +88,45 @@ function debuger(){
 }
 
 #========================================================
+# Clean URI
+#========================================================
+
+function cleanuri(){
+
+    if [[ ! "$surl" =~ ^https?://([a-zA-Z0-9.-]+)+(/[a-zA-Z0-9_.~%?&/=-]*)?$ ]]; then
+        echo "${RED}[!] A url ${surl} não atende os padrões! Utilize http:// ou https:// ${NUL}"
+        exit 1
+    fi
+
+    local source_formated="${surl//\:\/\// }"
+    surl=$(echo "${source_formated}" | sed 's/\// /g' | cut -d " " -f2)
+    path=$(echo "${source_formated}" | sed 's/\// /g' | cut -d " " -f3)
+}
+
+#========================================================
+# FIltaer Disable
+#========================================================
+
+function disbalefunctions(){
+    
+    local filter="$1"
+    mapfile -t pattern < <( echo -e "${filter//\,/\\n}" )
+
+    case "${pattern[*]}" in
+        all) export dirs_on=0 dns_on=0 email_on=0 url_on=0 vuln_on=0 ;;
+        net) export dns_on=0 url_on=0 ;;
+        sec) export dirs_on=0 vuln_on=0 ;;
+        org) export email_on=0 ;;
+        recon) export dirs_on=0 dns_on=0 email_on=0 url_on=0 ;;
+        threat) export vuln_on=0 ;; 
+    esac
+
+    for disable in "${pattern[@]}"; do
+        export "${disable}"_on=0
+    done
+}
+
+#========================================================
 # Check Connection
 #========================================================
 
@@ -98,31 +137,22 @@ function ctest(){
         return 1
     fi
 
+    # shellcheck disable=SC2154
+    if [[ "${ignore_icmp}" == 1 ]]; then
+        echo -e "${WHITE}[${YELLOW}!${WHITE}] ${YELLOW}Teste de conexão ignorado${NUL}"
+        return 0
+    fi
+
     # Teste um
     echo -e "${WHITE}[${PURPLE}*${WHITE}] ${BLUE}Iniciando teste de conexão 1${NUL}"
-    sleep 1.5s
-    if wget -q --spider "http://${surl}" 2>/dev/null; then
-        #echo -e "${WHITE}[${GREEN}+${WHITE}] ${GREEN}Conexão bem sucedida!${NUL}"
-        :
-    else
+    if ! wget -q --spider "http://${surl}" 2>/dev/null; then
         echo -e "${WHITE}[${RED}!${WHITE}] ${RED}Conexão mau-sucedida!${NUL}"
+        return 1
     fi
 
     # Teste dois
     echo -e "${WHITE}[${PURPLE}*${WHITE}] ${BLUE}Iniciando teste de conexão 2${NUL}"
-    sleep 1.5s
-
-    # Teste 2 (ICMP - opcional)
-    # shellcheck disable=SC2154
-    if [[ "${ignore_icmp}" == 1 ]]; then
-        echo -e "${WHITE}[${YELLOW}!${WHITE}] ${YELLOW}Ping ignorado${NUL}"
-        return 0
-    fi
-
-    if ping -c 1 "${surl}" >/dev/null 2>&1; then
-        #echo -e "${WHITE}[${GREEN}+${WHITE}] ${GREEN}Conexão bem sucedida!${NUL}"
-        :
-    else
+    if ! ping -c 1 "${surl}" >/dev/null 2>&1; then
         echo -e "${WHITE}[${RED}!${WHITE}] ${RED}[-] Conexão mau-sucedida!${NUL}"
         return 1
     fi
@@ -198,10 +228,10 @@ function __remove_export(){
             fi
 
             rm -rf "${dirs:?}/${surl}"   # 👈 proteção contra vazio
-            echo "${WHITE}[${BLUE}+${WHITE}] ${GREEN}Conteúdo removido com sucesso!${NUL}"
+            echo -e "${WHITE}[${BLUE}+${WHITE}] ${GREEN}Conteúdo removido com sucesso!${NUL}"
             exit 0
         ;;
-        *) echo "${WHITE}[${RED}*${WHITE}] ${RED}Operação cancelada.${NUL}" ; return 1 ;;
+        *) echo -e "${WHITE}[${RED}*${WHITE}] ${RED}Operação cancelada.${NUL}" ; return 1 ;;
     esac
 }
 
@@ -319,7 +349,7 @@ function dump_database(){
     
 #========================================================
 # Cookie
-#=======================================================
+#========================================================
 
 function cookie_manager(){
     
@@ -332,28 +362,25 @@ function cookie_manager(){
 
 }
 
-#=========================================================
-# Check Connection Timeout
-#=========================================================
+#========================================================
+# Cleanup
+#========================================================
 
-function cctimeout() {
-    local timeout=300
-    local start=$(date +%s)
-    local main_pid="$1"
+function cleanup(){
 
-    while true; do
-        if ping -c1 -W1 "$surl" >/dev/null 2>&1; then
-            start=$(date +%s)
-        fi
+    cat <<EOF
+${CYAN}===========================================${NUL}
+ ${YELLOW}[!]${NUL} SCAN FINALIZADO${NUL}
+${CYAN}===========================================${NUL}
+ ${GREEN}[+]${NUL} Vulnerabilidades  : ${WHITE}${vuln_count:-0}${NUL}
+ ${GREEN}[+]${NUL} Subdomínios       : ${WHITE}${subdomains_count:-0}${NUL}
+ ${GREEN}[+]${NUL} Diretórios/Arquivos achados: ${WHITE}${dirs_count:-0}${NUL}
+ ${GREEN}[+]${NUL} Logs gravados em  : 
+ ${BLUE}${output_site:-N/A}${NUL}
+${CYAN}===========================================${NUL}
+EOF
+    if ! __remove_export "${surl}"; then : ; fi
 
-        now=$(date +%s)
+    unset "${surl}"
 
-        if (( now - start >= timeout )); then
-            echo "Host offline há ${timeout}s"
-            kill "$main_pid"
-            break
-        fi
-
-        sleep 1
-    done
 }

@@ -97,3 +97,10 @@ Cookies
 IP patterns
 Classificação de confiança (base inicial)
 Estrutura para expansão futura de scoring engine
+
+[v1.0.0-beta] - Versão Beta
+Adicionado módulos de detecção de vulnerabilidade e email
+Reoganização da estrutura do código
+Atualização no arquivo waf.yaml
+Novas wordlists adicionadas
+Novas ferramentas

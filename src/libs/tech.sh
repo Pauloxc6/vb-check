@@ -26,7 +26,7 @@ function waf_check(){
     declare -A waf_cookies
 
     for fw in "${list_fws[@]}"; do
-        waf_servers["$fw"]="$(yq -r ".wafs.name.${fw}.server" "$tpl_waf")"
+        waf_servers["$fw"]="$(yq -r ".wafs.name.${fw}.server[]" "$tpl_waf")"
         waf_ips["$fw"]="$(yq -r ".wafs.name.${fw}.ips[]" "$tpl_waf" 2>/dev/null | tr '\n' ' ')"
         waf_cookies["$fw"]="$(yq -r ".wafs.name.${fw}.ips[]" "$tpl_waf" 2>/dev/null | tr '\n' ' ')"
     done

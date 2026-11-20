@@ -33,11 +33,18 @@ list_tools=(
     "bind-utils"
     "sslscan"
     "gobuster"
+    "nmap"
 )
 
 list_tools_pip=(
     "dnsrecon"
     "sslyze"
+)
+
+list_tools_go=(
+    "github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+    "github.com/PentestPad/subzy@latest"
+    "github.com/projectdiscovery/httpx/cmd/httpx@latest"
 )
 
 #===================================
@@ -63,6 +70,13 @@ if [[ "${os,,}" == "debian" || "${os,,}" == "ubuntu" ]]; then
             pip install "${tool}"
         } || echo "[!] Error ao instalar: ${tool}"
     done
+
+    for tool in "${list_tools_go[@]}";do
+        [[ "$(command -v "${tool}")" ]] && {
+            go -v install "${tool}"
+        } || echo "[!] Error ao instalar: ${tool}"
+    done
+
 fi
 
 if [[ "${os,,}" == "voidlinux" ]]; then
@@ -77,6 +91,13 @@ if [[ "${os,,}" == "voidlinux" ]]; then
             pip install "${tool}"
         } || echo "[!] Error ao instalar: ${tool}"
     done
+
+    for tool in "${list_tools_go[@]}";do
+        [[ "$(command -v "${tool}")" ]] && {
+            go -v install "${tool}"
+        } || echo "[!] Error ao instalar: ${tool}"
+    done
+
 fi
 
 if [[ "${os_bsd,,}" == "freebsd" ]]; then
@@ -91,4 +112,11 @@ if [[ "${os_bsd,,}" == "freebsd" ]]; then
             pip install "${tool}"
         } || echo "[!] Error ao instalar: ${tool}"
     done
+
+    for tool in "${list_tools_go[@]}";do
+        [[ "$(command -v "${tool}")" ]] && {
+            go -v install "${tool}"
+        } || echo "[!] Error ao instalar: ${tool}"
+    done
+
 fi

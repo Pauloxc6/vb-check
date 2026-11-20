@@ -3,7 +3,7 @@
 function sslc(){
 
     # shellcheck disable=SC2154
-    url="${surl}"
+    url="${surl}/${path}"
 
     cat <<EOF
  ____ ____  _     
